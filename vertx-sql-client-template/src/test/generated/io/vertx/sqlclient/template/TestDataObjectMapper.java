@@ -523,4 +523,10 @@ public class TestDataObjectMapper {
     }
     return obj;
   }
+
+  public static java.util.Map<String, Object> toParams(TestDataObject obj) {
+    java.util.Map<String, Object> params = new java.util.HashMap<>();
+    params.put("string_param", obj.getString());
+    return params;
+  }
 }

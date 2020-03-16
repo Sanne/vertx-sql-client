@@ -6,14 +6,13 @@ import io.vertx.sqlclient.Tuple;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class TupleMapper {
 
-  private static Pattern P = Pattern.compile(":(\\p{Alnum}+)");
+  private static Pattern PARAM_PATTERN = Pattern.compile(":(\\p{javaUnicodeIdentifierStart}\\p{javaUnicodeIdentifierPart}*)");
 
   final String sql;
   final List<String> mapping;
@@ -21,7 +20,7 @@ public class TupleMapper {
   public TupleMapper(SqlClient client, String template) {
     mapping = new ArrayList<>();
     StringBuilder actual = new StringBuilder();
-    Matcher matcher = P.matcher(template);
+    Matcher matcher = PARAM_PATTERN.matcher(template);
     int pos = 0;
     int idx = 0;
     while (matcher.find()) {

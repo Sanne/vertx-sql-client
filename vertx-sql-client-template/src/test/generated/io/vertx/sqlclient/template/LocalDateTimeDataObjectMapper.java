@@ -17,4 +17,9 @@ public class LocalDateTimeDataObjectMapper {
     }
     return obj;
   }
+
+  public static java.util.Map<String, Object> toParams(LocalDateTimeDataObject obj) {
+    java.util.Map<String, Object> params = new java.util.HashMap<>();
+    return params;
+  }
 }

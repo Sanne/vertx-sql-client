@@ -6,12 +6,14 @@ import io.vertx.codegen.MapperKind;
 import io.vertx.codegen.PropertyInfo;
 import io.vertx.codegen.PropertyKind;
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.codegen.type.AnnotationValueInfo;
 import io.vertx.codegen.type.ClassTypeInfo;
 import io.vertx.codegen.type.DataObjectInfo;
 import io.vertx.codegen.type.MapperInfo;
 import io.vertx.codegen.type.PrimitiveTypeInfo;
 import io.vertx.codegen.type.TypeInfo;
 import io.vertx.sqlclient.template.annotations.Mapped;
+import io.vertx.sqlclient.template.annotations.TemplateParam;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -64,6 +66,7 @@ public class DataObjectMapperGen extends Generator<DataObjectModel> {
     writer.print(" */\n");
     writer.print("public class " + model.getType().getSimpleName() + "Mapper {\n");
     genFromRow(visibility, model, writer);
+    genToParams(visibility, model, writer);
     writer.print("}\n");
     return buffer.toString();
   }
@@ -216,5 +219,24 @@ public class DataObjectMapperGen extends Generator<DataObjectModel> {
       s += "Array";
     }
     return s;
+  }
+
+  private void genToParams(String visibility, DataObjectModel model, PrintWriter writer) {
+    writer.print("\n");
+    writer.print("  " + visibility + " static java.util.Map<String, Object> toParams(" + model.getType().getSimpleName() + " obj) {\n");
+    writer.print("    java.util.Map<String, Object> params = new java.util.HashMap<>();\n");
+    model
+      .getPropertyMap()
+      .values()
+      .stream()
+      .filter(prop -> PK.contains(prop.getKind()))
+      .forEach(pi -> {
+        AnnotationValueInfo ann = pi.getAnnotation(TemplateParam.class.getName());
+        if (ann != null) {
+          writer.print("    params.put(\"" + ann.getMember("value") + "\", obj." + pi.getGetterMethod() + "());\n");
+        }
+      });
+    writer.print("    return params;\n");
+    writer.print("  }\n");
   }
 }

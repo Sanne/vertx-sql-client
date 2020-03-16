@@ -5,6 +5,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.sqlclient.template.annotations.Mapped;
+import io.vertx.sqlclient.template.annotations.TemplateParam;
 import io.vertx.sqlclient.template.wrappers.BooleanWrapper;
 import io.vertx.sqlclient.template.wrappers.DoubleWrapper;
 import io.vertx.sqlclient.template.wrappers.FloatWrapper;
@@ -249,6 +250,7 @@ public class TestDataObject {
     return string;
   }
 
+  @TemplateParam("string_param")
   public void setString(String string) {
     this.string = string;
   }

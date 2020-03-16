@@ -59,4 +59,13 @@ public interface QueryTemplate<T> {
   @GenIgnore
   void query(Map<String, Object> args, Handler<AsyncResult<List<T>>> resultHandler);
 
+  @GenIgnore
+  default <U> void query(U args, Function<U, Map<String, Object>> mapper, Handler<AsyncResult<List<T>>> resultHandler) {
+    query(mapper.apply(args), resultHandler);
+  }
+
+  @GenIgnore
+  default <U> Future<List<T>> query(U args, Function<U, Map<String, Object>> mapper) {
+    return query(mapper.apply(args));
+  }
 }
