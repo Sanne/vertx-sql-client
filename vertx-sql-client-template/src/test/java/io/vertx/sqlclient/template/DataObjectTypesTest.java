@@ -23,8 +23,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgConnection;
-import io.vertx.pgclient.PgTestBase;
 import io.vertx.sqlclient.template.wrappers.BooleanWrapper;
 import io.vertx.sqlclient.template.wrappers.DoubleWrapper;
 import io.vertx.sqlclient.template.wrappers.FloatWrapper;
@@ -53,7 +53,7 @@ import java.util.function.Function;
 /**
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
-public class DataObjectTypesTest extends PgTestBase {
+public class DataObjectTypesTest extends TemplateTestBase {
 
   private final LocalTime localTime = LocalTime.parse("19:35:58.237666");
   private final OffsetTime offsetTime = OffsetTime.of(localTime, ZoneOffset.UTC);
@@ -69,8 +69,8 @@ public class DataObjectTypesTest extends PgTestBase {
   protected PgConnection connection;
 
   @Before
-  public void setup(TestContext ctx) throws Exception {
-    super.setup();
+  public void setup(TestContext ctx) {
+    PgConnectOptions options = connectOptions();
     vertx = Vertx.vertx();
     Async async = ctx.async();
     PgConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
@@ -82,7 +82,9 @@ public class DataObjectTypesTest extends PgTestBase {
 
   @After
   public void teardown(TestContext ctx) {
-    connection.close();
+    if (connection != null) {
+      connection.close();
+    }
     vertx.close(ctx.asyncAssertSuccess());
   }
 

@@ -33,19 +33,20 @@ import org.junit.Test;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
-public class PgClientTest extends PgTestBase {
+public class PgClientTest extends TemplateTestBase {
 
   protected Vertx vertx;
   protected Consumer<Handler<AsyncResult<PgConnection>>> connector;
 
   @Before
   public void setup() throws Exception {
-    super.setup();
     vertx = Vertx.vertx();
   }
 
@@ -55,7 +56,7 @@ public class PgClientTest extends PgTestBase {
   }
 
   public PgClientTest() {
-    connector = (handler) -> PgConnection.connect(vertx, options, ar -> {
+    connector = (handler) -> PgConnection.connect(vertx, connectOptions(), ar -> {
       handler.handle(ar.map(p -> p));
     });
   }
@@ -63,23 +64,31 @@ public class PgClientTest extends PgTestBase {
   @Test
   public void testQuery(TestContext ctx) {
     connector.accept(ctx.asyncAssertSuccess(conn -> {
-      QueryTemplate<Row> template = QueryTemplate.create(conn, "SELECT id, randomnumber from WORLD WHERE id=:id");
-      template.query( Collections.singletonMap("id", 1), ctx.asyncAssertSuccess(res -> {
-        System.out.println("DONE");
+      QueryTemplate<Row> template = QueryTemplate.create(conn, "SELECT :id :: INT4 \"id\", :randomnumber :: INT4 \"randomnumber\"");
+      Map<String, Object> params = new HashMap<>();
+      params.put("id", 1);
+      params.put("randomnumber", 10);
+      template.query(params, ctx.asyncAssertSuccess(res -> {
+        ctx.assertEquals(1, res.size());
+        Row row = res.get(0);
+        ctx.assertEquals(1, row.getInteger(0));
+        ctx.assertEquals(10, row.getInteger(1));
       }));
     }));
   }
 
-  @Test
+ @Test
   public void testQueryMap(TestContext ctx) {
     World w = new World();
     w.id = 1;
+    w.randomnumber = 10;
     connector.accept(ctx.asyncAssertSuccess(conn -> {
-      QueryTemplate<World> template = QueryTemplate.create(conn, World.class, "SELECT id, randomnumber from WORLD WHERE id=:id");
+      QueryTemplate<World> template = QueryTemplate.create(conn, World.class, "SELECT :id :: INT4 \"id\", :randomnumber :: INT4 \"randomnumber\"");
       template.query(w, ctx.asyncAssertSuccess(res -> {
-        res.forEach(world -> {
-          System.out.println(world.id + " " + world.randomnumber);
-        });
+        ctx.assertEquals(1, res.size());
+        World world = res.get(0);
+        ctx.assertEquals(1, world.id);
+        ctx.assertEquals(10, world.randomnumber);
       }));
     }));
   }
@@ -108,7 +117,7 @@ public class PgClientTest extends PgTestBase {
       }));
     }));
   }
-
+  /*
   @Test
   public void testBatchUpdate(TestContext ctx) {
     connector.accept(ctx.asyncAssertSuccess(conn -> {
@@ -125,5 +134,5 @@ public class PgClientTest extends PgTestBase {
         }));
       }));
     }));
-  }
+  }*/
 }

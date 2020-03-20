@@ -57,7 +57,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
-public class DataObjectParamsTest extends PgTestBase {
+public class DataObjectParamsTest extends TemplateTestBase {
 
   private final LocalTime localTime = LocalTime.parse("19:35:58.237666");
   private final OffsetTime offsetTime = OffsetTime.of(localTime, ZoneOffset.UTC);
@@ -74,10 +74,9 @@ public class DataObjectParamsTest extends PgTestBase {
 
   @Before
   public void setup(TestContext ctx) throws Exception {
-    super.setup();
     vertx = Vertx.vertx();
     Async async = ctx.async();
-    PgConnection.connect(vertx, options, ctx.asyncAssertSuccess(conn -> {
+    PgConnection.connect(vertx, connectOptions(), ctx.asyncAssertSuccess(conn -> {
       connection = conn;
       async.complete();
     }));
@@ -86,7 +85,9 @@ public class DataObjectParamsTest extends PgTestBase {
 
   @After
   public void teardown(TestContext ctx) {
-    connection.close();
+    if (connection != null) {
+      connection.close();
+    }
     vertx.close(ctx.asyncAssertSuccess());
   }
 
