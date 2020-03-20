@@ -223,6 +223,8 @@ public class DataObjectMapperGen extends Generator<DataObjectModel> {
 
   private void genToParams(String visibility, DataObjectModel model, PrintWriter writer) {
     writer.print("\n");
+    writer.print("  " + visibility + " static final java.util.function.Function<" + model.getType().getSimpleName() + ", java.util.Map<String, Object>> PARAMS = " + model.getType().getSimpleName() + "Mapper::toParams;\n");
+    writer.print("\n");
     writer.print("  " + visibility + " static java.util.Map<String, Object> toParams(" + model.getType().getSimpleName() + " obj) {\n");
     writer.print("    java.util.Map<String, Object> params = new java.util.HashMap<>();\n");
     model

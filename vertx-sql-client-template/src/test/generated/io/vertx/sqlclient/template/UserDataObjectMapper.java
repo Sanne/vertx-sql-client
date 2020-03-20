@@ -26,6 +26,8 @@ public class UserDataObjectMapper {
     return obj;
   }
 
+  public static final java.util.function.Function<UserDataObject, java.util.Map<String, Object>> PARAMS = UserDataObjectMapper::toParams;
+
   public static java.util.Map<String, Object> toParams(UserDataObject obj) {
     java.util.Map<String, Object> params = new java.util.HashMap<>();
     params.put("first_name", obj.getFirstName());

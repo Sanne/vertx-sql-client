@@ -18,6 +18,8 @@ public class LocalDateTimeDataObjectMapper {
     return obj;
   }
 
+  public static final java.util.function.Function<LocalDateTimeDataObject, java.util.Map<String, Object>> PARAMS = LocalDateTimeDataObjectMapper::toParams;
+
   public static java.util.Map<String, Object> toParams(LocalDateTimeDataObject obj) {
     java.util.Map<String, Object> params = new java.util.HashMap<>();
     return params;
