@@ -75,6 +75,8 @@ public class DataObjectMapperGen extends Generator<DataObjectModel> {
     writer.print("\n");
     writer.print("  " + visibility + " static final java.util.function.Function<io.vertx.sqlclient.Row, " + model.getType().getSimpleName() + "> READER = " + model.getType().getSimpleName() + "Mapper::fromRow;\n");
     writer.print("\n");
+    writer.print("  " + visibility + " static final java.util.stream.Collector<io.vertx.sqlclient.Row, ?, java.util.List<" + model.getType().getSimpleName() + ">> COLLECTOR = " + "java.util.stream.Collectors.mapping(READER, java.util.stream.Collectors.toList());\n");
+    writer.print("\n");
     writer.print("  " + visibility + " static " + model.getType().getSimpleName() + " fromRow(io.vertx.sqlclient.Row row) {\n");
     writer.print("    " + model.getType().getSimpleName() + " obj = new " + model.getType().getSimpleName() + "();\n");
     writer.print("    Object val;\n");

@@ -8,6 +8,8 @@ public class LocalDateTimeDataObjectMapper {
 
   public static final java.util.function.Function<io.vertx.sqlclient.Row, LocalDateTimeDataObject> READER = LocalDateTimeDataObjectMapper::fromRow;
 
+  public static final java.util.stream.Collector<io.vertx.sqlclient.Row, ?, java.util.List<LocalDateTimeDataObject>> COLLECTOR = java.util.stream.Collectors.mapping(READER, java.util.stream.Collectors.toList());
+
   public static LocalDateTimeDataObject fromRow(io.vertx.sqlclient.Row row) {
     LocalDateTimeDataObject obj = new LocalDateTimeDataObject();
     Object val;

@@ -26,16 +26,21 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.pgclient.PgConnection;
 import io.vertx.pgclient.PgTestBase;
 import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.Tuple;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
@@ -117,6 +122,24 @@ public class PgClientTest extends TemplateTestBase {
       }));
     }));
   }
+
+  @Test
+  public void testLocalDateTimeWithCodegenCollector(TestContext ctx) {
+    connector.accept(ctx.asyncAssertSuccess(conn -> {
+      LocalDateTime ldt = LocalDateTime.parse("2017-05-14T19:35:58.237666");
+      conn.preparedQuery(
+        "select $1 :: TIMESTAMP WITHOUT TIME ZONE \"localDateTime\"",
+        Tuple.of(ldt),
+        LocalDateTimeDataObjectMapper.COLLECTOR,
+        ctx.asyncAssertSuccess(res -> {
+        ctx.assertEquals(1, res.size());
+        ctx.assertEquals(1, res.value().size());
+        ctx.assertEquals(ldt, res.value().get(0).getLocalDateTime());
+      }));
+    }));
+  }
+
+
   /*
   @Test
   public void testBatchUpdate(TestContext ctx) {

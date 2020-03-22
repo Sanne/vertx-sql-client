@@ -8,6 +8,8 @@ public class TestDataObjectMapper {
 
   public static final java.util.function.Function<io.vertx.sqlclient.Row, TestDataObject> READER = TestDataObjectMapper::fromRow;
 
+  public static final java.util.stream.Collector<io.vertx.sqlclient.Row, ?, java.util.List<TestDataObject>> COLLECTOR = java.util.stream.Collectors.mapping(READER, java.util.stream.Collectors.toList());
+
   public static TestDataObject fromRow(io.vertx.sqlclient.Row row) {
     TestDataObject obj = new TestDataObject();
     Object val;
