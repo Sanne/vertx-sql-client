@@ -17,88 +17,75 @@
 
 package io.vertx.sqlclient.impl;
 
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
+import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.SqlResult;
-import io.vertx.sqlclient.PropertyKind;
+import io.vertx.sqlclient.Tuple;
+import io.vertx.sqlclient.impl.command.CommandScheduler;
+import io.vertx.sqlclient.impl.command.ExtendedBatchQueryCommand;
+import io.vertx.sqlclient.impl.command.ExtendedQueryCommand;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collector;
 
 /**
  * A query result handler for building a {@link SqlResult}.
  */
-class SqlResultBuilder<T, R extends SqlResultBase<T>, L extends SqlResult<T>> implements QueryResultHandler<T>, Promise<Boolean> {
+class SqlResultBuilder<T, R extends SqlResultBase<T>, L extends SqlResult<T>> {
 
-  private final Promise<L> handler;
+  private final CommandScheduler scheduler;
+  private final PreparedStatement preparedStatement;
+  private final boolean autoCommit;
   private final Function<T, R> factory;
-  private R first;
-  private R current;
-  private Throwable failure;
-  private boolean suspended;
+  private final Collector<Row, ?, T> collector;
 
-  SqlResultBuilder(Function<T, R> factory, Promise<L> handler) {
+  public SqlResultBuilder(CommandScheduler scheduler,
+                          PreparedStatement preparedStatement,
+                          boolean autoCommit,
+                          Function<T, R> factory,
+                          Collector<Row, ?, T> collector) {
+    this.scheduler = scheduler;
+    this.preparedStatement = preparedStatement;
+    this.autoCommit = autoCommit;
     this.factory = factory;
-    this.handler = handler;
+    this.collector = collector;
   }
 
-  @Override
-  public void handleResult(int updatedCount, int size, RowDesc desc, T result, Throwable failure) {
-    if (failure != null) {
-      this.failure = failure;
-    } else {
-      R r = factory.apply(result);
-      r.updated = updatedCount;
-      r.size = size;
-      r.columnNames = desc != null ? desc.columnNames() : null;
-      handleResult(r);
+  SqlResultHandler<T, R, L> execute(Tuple args,
+                                    int fetch,
+                                    String cursorId,
+                                    boolean suspended,
+                                    Promise<L> resultHandler) {
+    String msg = preparedStatement.prepare((TupleInternal) args);
+    if (msg != null) {
+      resultHandler.fail(msg);
+      return null;
     }
+    SqlResultHandler<T, R, L> handler = new SqlResultHandler<>(factory, resultHandler);
+    ExtendedQueryCommand<T> cmd = new ExtendedQueryCommand<>(
+      preparedStatement,
+      args,
+      fetch,
+      cursorId,
+      suspended,
+      autoCommit,
+      collector,
+      handler);
+    scheduler.schedule(cmd, handler);
+    return handler;
   }
 
-  private void handleResult(R result) {
-    R c = current;
-    if (c == null) {
-      first = result;
-      current = result;
-    } else {
-      c.next = result;
-      current = result;
-    }
-  }
-
-  @Override
-  public <V> void addProperty(PropertyKind<V> property, V value) {
-    R r = this.current;
-    if (r != null) {
-      if (r.properties == null) {
-        // lazy init
-        r.properties = new HashMap<>();
+  void batch(List<Tuple> argsList, Promise<L> resultHandler) {
+    for  (Tuple args : argsList) {
+      String msg = preparedStatement.prepare((TupleInternal)args);
+      if (msg != null) {
+        resultHandler.fail(msg);
+        return;
       }
-      r.properties.put(property, value);
     }
-  }
-
-  @Override
-  public boolean tryComplete(Boolean result) {
-    suspended = result;
-    if (failure != null) {
-      return handler.tryFail(failure);
-    } else {
-      return handler.tryComplete((L) first);
-    }
-  }
-
-  @Override
-  public boolean tryFail(Throwable cause) {
-    return handler.tryFail(cause);
-  }
-
-  @Override
-  public Future<Boolean> future() {
-    throw new UnsupportedOperationException();
-  }
-
-  public boolean isSuspended() {
-    return suspended;
+    SqlResultHandler<T, R, L> handler = new SqlResultHandler<>(factory, resultHandler);
+    ExtendedBatchQueryCommand<T> cmd = new ExtendedBatchQueryCommand<>(preparedStatement, argsList, autoCommit, collector, handler);
+    scheduler.schedule(cmd, handler);
   }
 }
