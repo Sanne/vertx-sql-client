@@ -69,7 +69,7 @@ public class DB2SocketConnection extends SocketConnectionBase {
     @Override
     protected <R> void doSchedule(CommandBase<R> cmd, Handler<AsyncResult<R>> handler) {
       if (cmd instanceof TxCommand) {
-        TxCommand txCmd = (TxCommand) cmd;
+        TxCommand<R> txCmd = (TxCommand<R>) cmd;
         if (txCmd.kind == TxCommand.Kind.BEGIN) {
           // DB2 always implicitly starts a transaction with each query, and does
           // not support the 'BEGIN' keyword. Instead we can no-op BEGIN commands
@@ -82,7 +82,7 @@ public class DB2SocketConnection extends SocketConnectionBase {
               false,
               QueryCommandBase.NULL_COLLECTOR,
               QueryResultHandler.NOOP_HANDLER);
-            super.doSchedule(cmd2, ar -> handler.handle(ar.mapEmpty()));
+            super.doSchedule(cmd2, ar -> handler.handle(ar.map(txCmd.result)));
 
         }
       } else {
